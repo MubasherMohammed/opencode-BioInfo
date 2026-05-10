@@ -1,4 +1,4 @@
-# OpenCode AI Starter Pack
+# OpenCode BioInfo
 
 **80+ agentic skills. One-command setup. Ready for software engineering and bioinformatics work.**
 
@@ -67,8 +67,8 @@ A curated OpenCode configuration combining **11 software engineering workflow sk
 ### One-Command Setup
 
 ```bash
-git clone https://github.com/MubasherMohammed/opencode-ai-starter.git
-cd opencode-ai-starter
+git clone https://github.com/MubasherMohammed/opencode-BioInfo.git
+cd opencode-BioInfo
 chmod +x setup.sh
 ./setup.sh
 ```
