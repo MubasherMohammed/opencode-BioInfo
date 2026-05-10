@@ -1,0 +1,67 @@
+{
+  "$schema": "https://raw.githubusercontent.com/code-yeongyu/oh-my-openagent/master/assets/oh-my-openagent.schema.json",
+  "agents": {
+    "sisyphus": {
+      "model": "opencode/kimi-k2.5",
+      "variant": "high"
+    },
+    "prometheus": {
+      "model": "opencode/kimi-k2.5",
+      "variant": "high"
+    },
+    "oracle": {
+      "model": "opencode/glm-5",
+      "variant": "high"
+    },
+    "librarian": {
+      "model": "opencode/minimax-m2.5",
+      "variant": "low"
+    },
+    "explore": {
+      "model": "opencode/gpt-5-nano",
+      "variant": "low"
+    },
+    "atlas": {
+      "model": "opencode/kimi-k2.5",
+      "variant": "high"
+    },
+    "sisyphus-junior": {
+      "model": "opencode/gpt-5-nano",
+      "variant": "low"
+    }
+  },
+  "categories": {
+    "visual-engineering": {
+      "model": "opencode/glm-5",
+      "variant": "high"
+    },
+    "ultrabrain": {
+      "model": "opencode/kimi-k2.5",
+      "variant": "xhigh"
+    },
+    "deep": {
+      "model": "opencode/kimi-k2.5",
+      "variant": "high"
+    },
+    "artistry": {
+      "model": "opencode/glm-5",
+      "variant": "high"
+    },
+    "quick": {
+      "model": "opencode/gpt-5-nano",
+      "variant": "low"
+    },
+    "unspecified-low": {
+      "model": "opencode/gpt-5-nano",
+      "variant": "low"
+    },
+    "unspecified-high": {
+      "model": "opencode/kimi-k2.5",
+      "variant": "high"
+    },
+    "writing": {
+      "model": "opencode/glm-5",
+      "variant": "medium"
+    }
+  }
+}
