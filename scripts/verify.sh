@@ -46,7 +46,12 @@ CLAW_SKILLS=$(find "${REPO_DIR}/skills/clawbio" -name "SKILL.md" -maxdepth 2 2>/
 [ "$POWER_SKILLS" -ge 11 ] && pass "power-pack: $POWER_SKILLS skills found" || fail "power-pack skills incomplete ($POWER_SKILLS)"
 [ "$CLAW_SKILLS" -ge 60 ] && pass "ClawBio: $CLAW_SKILLS skills found" || fail "ClawBio skills incomplete ($CLAW_SKILLS)"
 
-# ClawBio Python files
+# ClawBio Python package
+[ -d "${REPO_DIR}/python/clawbio" ] && pass "ClawBio Python package (clawbio/) exists" || fail "ClawBio Python package missing"
+[ -f "${REPO_DIR}/python/clawbio/runner.py" ] && pass "ClawBio runner.py exists" || fail "ClawBio runner.py missing"
+[ -f "${REPO_DIR}/python/clawbio/skill_intents.py" ] && pass "ClawBio skill_intents.py exists" || fail "ClawBio skill_intents.py missing"
+
+# ClawBio Python CLI
 [ -f "${REPO_DIR}/python/clawbio.py" ] && pass "ClawBio CLI (clawbio.py) exists" || fail "ClawBio CLI missing"
 [ -f "${REPO_DIR}/python/requirements.txt" ] && pass "Python requirements.txt exists" || fail "Python requirements.txt missing"
 [ -d "${HOME}/.local/venvs/clawbio" ] && pass "ClawBio Python venv exists" || fail "ClawBio Python venv missing"
@@ -54,7 +59,16 @@ CLAW_SKILLS=$(find "${REPO_DIR}/skills/clawbio" -name "SKILL.md" -maxdepth 2 2>/
 if [ -d "${HOME}/.local/venvs/clawbio" ]; then
     source "${HOME}/.local/venvs/clawbio/bin/activate"
     python3 -c "import pandas; import requests; import numpy" 2>/dev/null && pass "ClawBio core Python deps installed" || fail "ClawBio Python deps issue"
+    # Test CLI list shows all skills with [OK]
+    LIST_OUTPUT=$(cd "${REPO_DIR}/python" && python clawbio.py list 2>/dev/null)
+    echo "$LIST_OUTPUT" | grep -q "\[OK\]" && pass "ClawBio CLI lists skills with [OK]" || fail "ClawBio CLI skill scripts not found"
+    SKIP_COUNT=$(echo "$LIST_OUTPUT" | grep -c "\[MISSING\]" || true)
+    [ "$SKIP_COUNT" -eq 0 ] && pass "ClawBio CLI: 0 missing scripts" || fail "ClawBio CLI: $SKIP_COUNT missing scripts"
 fi
+
+# Python skill implementation scripts
+SKILL_SCRIPT_COUNT=$(find "${REPO_DIR}/python/skills" -name "*.py" -maxdepth 2 2>/dev/null | wc -l | xargs)
+[ "$SKILL_SCRIPT_COUNT" -ge 30 ] && pass "Python skill scripts: $SKILL_SCRIPT_COUNT found" || fail "Python skill scripts incomplete ($SKILL_SCRIPT_COUNT)"
 
 # Commands symlinked
 CMD_COUNT=$(ls -1 "${HOME}/.config/opencode/commands/"*.md 2>/dev/null | wc -l | xargs)

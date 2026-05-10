@@ -28,8 +28,32 @@ echo "▸ Installing configuration files..."
 mkdir -p "${CONFIG_DIR}"
 mkdir -p "${CONFIG_DIR}/commands"
 
-# Generate opencode.json with unified plugin pointing to THIS repo
-cat > "${CONFIG_DIR}/opencode.json" << OCFGEOF
+# Generate or update opencode.json
+# If config already exists, only update the plugin entry to preserve providers & settings
+if [ -f "${CONFIG_DIR}/opencode.json" ]; then
+    echo "  Existing opencode.json found — updating plugin entry only..."
+    python3 -c "
+import json, sys
+path = '${CONFIG_DIR}/opencode.json'
+with open(path) as f:
+    cfg = json.load(f)
+# Replace old plugin entries with unified entry
+old_plugins = ['opencode-power-pack', 'clawbio', 'opencode-lmstudio', '@guard22/opencode-multi-auth-codex']
+new_plugins = [p for p in cfg.get('plugin', []) if not any(old in p for old in old_plugins)]
+# Ensure the unified entry is present
+unified = 'opencode-bioinfo@git+file://${SCRIPT_DIR}'
+if unified not in new_plugins:
+    new_plugins.append(unified)
+if 'oh-my-openagent@latest' not in new_plugins:
+    new_plugins.insert(0, 'oh-my-openagent@latest')
+cfg['plugin'] = new_plugins
+with open(path, 'w') as f:
+    json.dump(cfg, f, indent=4)
+    f.write('\n')
+print('  ✓ Plugin entry updated')
+" 2>&1 || echo "  ⚠ Could not update opencode.json"
+else
+    cat > "${CONFIG_DIR}/opencode.json" << OCFGEOF
 {
     "\$schema": "https://opencode.ai/config.json",
     "instructions": [
@@ -56,6 +80,7 @@ cat > "${CONFIG_DIR}/opencode.json" << OCFGEOF
     }
 }
 OCFGEOF
+fi
 
 cp "${SCRIPT_DIR}/configs/AGENTS.md" "${CONFIG_DIR}/AGENTS.md"
 cp "${SCRIPT_DIR}/configs/Global_instructions.md" "${CONFIG_DIR}/Global_instructions.md"
