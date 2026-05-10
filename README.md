@@ -79,16 +79,18 @@ Without a subscription, these model IDs will not resolve. You can replace them w
 
 ### Required: API Keys (for bioinformatics skills)
 
-Set these in your `~/.zshrc` (or equivalent shell config):
+Set these environment variables in your `~/.zshrc` (or equivalent shell config):
 
 ```bash
 # Cloudflare Workers AI (primary LLM provider)
-export CLOUDFLARE_ACCOUNT_ID="19277c7702363e6a2fd37c0a52b512c2"
-export CLOUDFLARE_API_KEY="cfut_<your-api-key>"
+export CLOUDFLARE_ACCOUNT_ID="<your-cloudflare-account-id>"
+export CLOUDFLARE_API_KEY="<your-cloudflare-api-token>"
 
 # OpenAI (optional — for skills that need GPT)
-export OPENAI_API_KEY="sk-..."
+export OPENAI_API_KEY="<your-openai-key>"
 ```
+
+Get your Cloudflare values from the [Cloudflare Dashboard](https://dash.cloudflare.com) → **My Profile** → **API Tokens**. Never commit actual keys to git — use environment variables only.
 
 After adding, run `source ~/.zshrc` to apply.
 
