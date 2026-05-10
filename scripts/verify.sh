@@ -7,8 +7,11 @@ FAIL=0
 pass() { echo "  ✓ $1"; PASS=$((PASS + 1)); }
 fail() { echo "  ✗ $1"; FAIL=$((FAIL + 1)); }
 
-echo "  ── Verifying OpenCode AI Setup ──"
+echo "  ── Verifying OpenCode BioInfo Setup ──"
 echo ""
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_DIR="$(dirname "$SCRIPT_DIR")"
 
 # OpenCode installed
 command -v opencode &>/dev/null && pass "OpenCode is installed" || fail "OpenCode not found"
@@ -25,46 +28,42 @@ done
 python3 -m json.tool "${HOME}/.config/opencode/opencode.json" >/dev/null 2>&1 && pass "opencode.json is valid JSON" || fail "opencode.json is invalid"
 python3 -m json.tool "${HOME}/.config/opencode/oh-my-openagent.json" >/dev/null 2>&1 && pass "oh-my-openagent.json is valid JSON" || fail "oh-my-openagent.json is invalid"
 
-# Plugin repos
-[ -d "${HOME}/code/opencode-power-pack" ] && pass "opencode-power-pack cloned" || fail "opencode-power-pack missing"
-[ -d "${HOME}/code/ClawBio" ] && pass "ClawBio cloned" || fail "ClawBio missing"
+# Plugin JS exists in repo
+[ -f "${REPO_DIR}/.opencode/plugins/opencode-bioinfo.js" ] && pass "Unified plugin JS exists" || fail "Unified plugin JS missing"
+[ -f "${REPO_DIR}/package.json" ] && pass "Plugin package.json exists" || fail "Plugin package.json missing"
 
-# Plugin JS
-[ -f "${HOME}/code/opencode-power-pack/.opencode/plugins/opencode-power-pack.js" ] && pass "power-pack plugin JS exists" || fail "power-pack plugin JS missing"
-[ -f "${HOME}/code/ClawBio/.opencode/plugins/clawbio.js" ] && pass "ClawBio plugin JS exists" || fail "ClawBio plugin JS missing"
-[ -f "${HOME}/code/ClawBio/package.json" ] && pass "ClawBio package.json exists" || fail "ClawBio package.json missing"
-
-# Plugin JS exports
+# Plugin JS exports correctly
 node -e "
-import('file://${HOME}/code/opencode-power-pack/.opencode/plugins/opencode-power-pack.js').then(m => {
-    if (typeof m.OpencodePowerPack === 'function') { console.log('OK'); process.exit(0); }
+import('file://${REPO_DIR}/.opencode/plugins/opencode-bioinfo.js').then(m => {
+    if (typeof m.OpencodeBioinfo === 'function') { console.log('OK'); process.exit(0); }
     else { process.exit(1); }
-}).catch(() => process.exit(1));
-" 2>/dev/null && pass "power-pack plugin JS exports correctly" || fail "power-pack plugin JS export issue"
-
-node -e "
-import('file://${HOME}/code/ClawBio/.opencode/plugins/clawbio.js').then(m => {
-    if (typeof m.ClawBio === 'function') { console.log('OK'); process.exit(0); }
-    else { process.exit(1); }
-}).catch(() => process.exit(1));
-" 2>/dev/null && pass "ClawBio plugin JS exports correctly" || fail "ClawBio plugin JS export issue"
+}).catch((e) => { console.error(e.message); process.exit(1); });
+" 2>/dev/null && pass "Plugin JS exports correctly" || fail "Plugin JS export issue"
 
 # Skills directories
-POWER_SKILLS=$(find "${HOME}/code/opencode-power-pack/skills" -name "SKILL.md" -maxdepth 2 2>/dev/null | wc -l | xargs)
-CLAW_SKILLS=$(find "${HOME}/code/ClawBio/skills" -name "SKILL.md" -maxdepth 2 2>/dev/null | wc -l | xargs)
-[ "$POWER_SKILLS" -ge 11 ] && pass "power-pack: $POWER_SKILLS skills found" || fail "power-pack skills incomplete"
+POWER_SKILLS=$(find "${REPO_DIR}/skills/power-pack" -name "SKILL.md" -maxdepth 2 2>/dev/null | wc -l | xargs)
+CLAW_SKILLS=$(find "${REPO_DIR}/skills/clawbio" -name "SKILL.md" -maxdepth 2 2>/dev/null | wc -l | xargs)
+[ "$POWER_SKILLS" -ge 11 ] && pass "power-pack: $POWER_SKILLS skills found" || fail "power-pack skills incomplete ($POWER_SKILLS)"
 [ "$CLAW_SKILLS" -ge 60 ] && pass "ClawBio: $CLAW_SKILLS skills found" || fail "ClawBio skills incomplete ($CLAW_SKILLS)"
+
+# ClawBio Python files
+[ -f "${REPO_DIR}/python/clawbio.py" ] && pass "ClawBio CLI (clawbio.py) exists" || fail "ClawBio CLI missing"
+[ -f "${REPO_DIR}/python/requirements.txt" ] && pass "Python requirements.txt exists" || fail "Python requirements.txt missing"
+[ -d "${HOME}/.local/venvs/clawbio" ] && pass "ClawBio Python venv exists" || fail "ClawBio Python venv missing"
+
+if [ -d "${HOME}/.local/venvs/clawbio" ]; then
+    source "${HOME}/.local/venvs/clawbio/bin/activate"
+    python3 -c "import pandas; import requests; import numpy" 2>/dev/null && pass "ClawBio core Python deps installed" || fail "ClawBio Python deps issue"
+fi
 
 # Commands symlinked
 CMD_COUNT=$(ls -1 "${HOME}/.config/opencode/commands/"*.md 2>/dev/null | wc -l | xargs)
 [ "$CMD_COUNT" -ge 11 ] && pass "$CMD_COUNT slash commands symlinked" || fail "Commands incomplete ($CMD_COUNT)"
 
-# ClawBio Python deps
-[ -d "${HOME}/.local/venvs/clawbio" ] && pass "ClawBio Python venv exists" || fail "ClawBio Python venv missing"
-if [ -d "${HOME}/.local/venvs/clawbio" ]; then
-    source "${HOME}/.local/venvs/clawbio/bin/activate"
-    python3 -c "import pandas; import requests; import numpy" 2>/dev/null && pass "ClawBio core Python deps installed" || fail "ClawBio Python deps issue"
-fi
+# Config files in repo
+[ -f "${REPO_DIR}/configs/AGENTS.md" ] && pass "Repo AGENTS.md exists" || fail "Repo AGENTS.md missing"
+[ -f "${REPO_DIR}/configs/Global_instructions.md" ] && pass "Repo Global_instructions.md exists" || fail "Repo Global_instructions.md missing"
+[ -f "${REPO_DIR}/configs/oh-my-openagent.json" ] && pass "Repo oh-my-openagent.json exists" || fail "Repo oh-my-openagent.json missing"
 
 echo ""
 echo "  ── Results: ${PASS} passed, ${FAIL} failed ──"

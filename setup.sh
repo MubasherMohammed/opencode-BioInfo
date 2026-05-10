@@ -2,18 +2,16 @@
 set -euo pipefail
 
 # ╔══════════════════════════════════════════════════════════════╗
-# ║  OpenCode AI — Automated Setup                              ║
-# ║  Installs: opencode-power-pack + ClawBio + all configs      ║
+# ║  OpenCode BioInfo — Automated Setup                         ║
+# ║  Self-contained: no external repos needed at install time.  ║
+# ║  11 engineering skills + 64 bioinformatics skills.          ║
 # ╚══════════════════════════════════════════════════════════════╝
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_DIR="${HOME}/.config/opencode"
-CODE_DIR="${HOME}/code"
-POWER_PACK_DIR="${CODE_DIR}/opencode-power-pack"
-CLAWBIO_DIR="${CODE_DIR}/ClawBio"
 VENV_DIR="${HOME}/.local/venvs/clawbio"
 
-echo "▸ Setting up OpenCode AI Starter..."
+echo "▸ Setting up OpenCode BioInfo..."
 echo ""
 
 # ── Step 1: Ensure OpenCode is installed ──────────────────────
@@ -23,45 +21,14 @@ if ! command -v opencode &>/dev/null; then
 fi
 echo "✓ OpenCode $(opencode --version 2>/dev/null || echo 'found')"
 
-# ── Step 2: Ensure ~/code/ exists ──────────────────────────────
-mkdir -p "${CODE_DIR}"
-
-# ── Step 3: Clone skill repos ──────────────────────────────────
-echo ""
-echo "▸ Cloning skill repos..."
-
-if [ ! -d "${POWER_PACK_DIR}" ]; then
-    git clone https://github.com/waybarrios/opencode-power-pack.git "${POWER_PACK_DIR}"
-    echo "✓ opencode-power-pack cloned"
-else
-    echo "✓ opencode-power-pack already exists (skipping clone)"
-fi
-
-if [ ! -d "${CLAWBIO_DIR}" ]; then
-    git clone https://github.com/ClawBio/ClawBio.git "${CLAWBIO_DIR}"
-    echo "✓ ClawBio cloned"
-else
-    echo "✓ ClawBio already exists (skipping clone)"
-fi
-
-# ── Step 4: Inject ClawBio OpenCode plugin shim ────────────────
-echo ""
-echo "▸ Adding OpenCode plugin shim to ClawBio..."
-
-CLAWBIO_PLUGIN_DIR="${CLAWBIO_DIR}/.opencode/plugins"
-mkdir -p "${CLAWBIO_PLUGIN_DIR}"
-cp "${SCRIPT_DIR}/patches/clawbio-plugin.js" "${CLAWBIO_PLUGIN_DIR}/clawbio.js"
-cp "${SCRIPT_DIR}/patches/clawbio-package.json" "${CLAWBIO_DIR}/package.json"
-echo "✓ ClawBio plugin shim installed"
-
-# ── Step 5: Set up OpenCode config files ───────────────────────
+# ── Step 2: Set up OpenCode config files ───────────────────────
 echo ""
 echo "▸ Installing configuration files..."
 
 mkdir -p "${CONFIG_DIR}"
 mkdir -p "${CONFIG_DIR}/commands"
 
-# Generate opencode.json with user's actual home directory
+# Generate opencode.json with unified plugin pointing to THIS repo
 cat > "${CONFIG_DIR}/opencode.json" << OCFGEOF
 {
     "\$schema": "https://opencode.ai/config.json",
@@ -69,10 +36,8 @@ cat > "${CONFIG_DIR}/opencode.json" << OCFGEOF
         "Global_instructions.md"
     ],
     "plugin": [
-        "opencode-lmstudio@latest",
         "oh-my-openagent@latest",
-        "opencode-power-pack@git+file://${POWER_PACK_DIR}",
-        "clawbio@git+file://${CLAWBIO_DIR}"
+        "opencode-bioinfo@git+file://${SCRIPT_DIR}"
     ],
     "provider": {
         "openai": {
@@ -92,22 +57,24 @@ cat > "${CONFIG_DIR}/opencode.json" << OCFGEOF
 }
 OCFGEOF
 
-cp "${SCRIPT_DIR}/AGENTS.md" "${CONFIG_DIR}/AGENTS.md"
-cp "${SCRIPT_DIR}/Global_instructions.md" "${CONFIG_DIR}/Global_instructions.md"
-cp "${SCRIPT_DIR}/oh-my-openagent.json" "${CONFIG_DIR}/oh-my-openagent.json"
+cp "${SCRIPT_DIR}/configs/AGENTS.md" "${CONFIG_DIR}/AGENTS.md"
+cp "${SCRIPT_DIR}/configs/Global_instructions.md" "${CONFIG_DIR}/Global_instructions.md"
+cp "${SCRIPT_DIR}/configs/oh-my-openagent.json" "${CONFIG_DIR}/oh-my-openagent.json"
 
 echo "✓ OpenCode configuration installed"
 
-# ── Step 6: Symlink power-pack slash commands ──────────────────
+# ── Step 3: Symlink slash commands ──────────────────────────
 echo ""
 echo "▸ Symlinking slash commands..."
 
-for cmd in "${POWER_PACK_DIR}/commands/"*.md; do
-    ln -sf "$cmd" "${CONFIG_DIR}/commands/$(basename "$cmd")"
+for cmd in "${SCRIPT_DIR}/commands/"*.md; do
+    if [ -f "$cmd" ]; then
+        ln -sf "$cmd" "${CONFIG_DIR}/commands/$(basename "$cmd")"
+    fi
 done
-echo "✓ $(ls -1 "${POWER_PACK_DIR}/commands/"*.md 2>/dev/null | wc -l | xargs) commands symlinked"
+echo "✓ $(ls -1 "${SCRIPT_DIR}/commands/"*.md 2>/dev/null | wc -l | xargs) commands symlinked"
 
-# ── Step 7: Install ClawBio Python dependencies ────────────────
+# ── Step 4: Install ClawBio Python dependencies ────────────────
 echo ""
 echo "▸ Installing ClawBio Python dependencies..."
 
@@ -117,17 +84,18 @@ if [ ! -d "${VENV_DIR}" ]; then
 fi
 
 source "${VENV_DIR}/bin/activate"
-pip install -q -r "${CLAWBIO_DIR}/requirements.txt" 2>/dev/null
+pip install -q -r "${SCRIPT_DIR}/python/requirements.txt" 2>/dev/null
 echo "✓ ClawBio Python dependencies installed"
 
-# ── Step 8: Clear plugin cache ────────────────────────────────
+# ── Step 5: Clear plugin cache ────────────────────────────────
 echo ""
 echo "▸ Clearing plugin cache..."
+rm -rf "${HOME}/.cache/opencode/node_modules/opencode-bioinfo" 2>/dev/null || true
 rm -rf "${HOME}/.cache/opencode/node_modules/opencode-power-pack" 2>/dev/null || true
 rm -rf "${HOME}/.cache/opencode/node_modules/clawbio" 2>/dev/null || true
 echo "✓ Plugin cache cleared"
 
-# ── Step 9: Verify ────────────────────────────────────────────
+# ── Step 6: Verify ───────────────────────────────────────────
 echo ""
 echo "▸ Running verification..."
 "${SCRIPT_DIR}/scripts/verify.sh" || {
@@ -138,9 +106,11 @@ echo "▸ Running verification..."
 # ── Done ───────────────────────────────────────────────────────
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║  OpenCode AI Setup Complete!                                ║"
+echo "║  OpenCode BioInfo Setup Complete!                           ║"
 echo "║                                                              ║"
 echo "║  Restart OpenCode:  pkill -f opencode && opencode            ║"
-echo "║  Verify skills:     List the skills you have available.      ║"
+echo "║                                                              ║"
+echo "║  Skills: 11 engineering + 64 bioinformatics = ~75 total      ║"
+echo "║  Commands: Ctrl+P → /analyse, /list-skills, /code-review...  ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""

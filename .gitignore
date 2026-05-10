@@ -10,3 +10,12 @@ Thumbs.db
 # Temp
 /tmp/
 *.log
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+
+# Node
+node_modules/

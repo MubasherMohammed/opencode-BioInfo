@@ -1,0 +1,23 @@
+{
+  "name": "opencode-bioinfo",
+  "version": "1.0.0",
+  "description": "Self-contained OpenCode AI starter pack — 11 software engineering skills + 64 bioinformatics skills, no external repos required.",
+  "type": "module",
+  "main": ".opencode/plugins/opencode-bioinfo.js",
+  "license": "MIT",
+  "author": "Mubasher Mohammed",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MubasherMohammed/opencode-BioInfo.git"
+  },
+  "keywords": [
+    "opencode",
+    "bioinformatics",
+    "skills",
+    "pharmacogenomics",
+    "gwas",
+    "single-cell",
+    "variant-annotation",
+    "ai-agent"
+  ]
+}
