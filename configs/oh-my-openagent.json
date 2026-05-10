@@ -1,4 +1,6 @@
 {
+  "_description": "Model subscription requirements: All models below (opencode/kimi-k2.5, opencode/glm-5, opencode/minimax-m2.5, opencode/gpt-5-nano) are OpenCode cloud-hosted models that require an OpenCode Pro subscription. On a fresh clone, these model IDs will not resolve without a valid subscription and API key configured in opencode.json.",
+  "//": "If you don't have an OpenCode Pro subscription, replace the model IDs with local models (e.g. ollama/qwen2.5-coder:3b) or another provider you have access to.",
   "$schema": "https://raw.githubusercontent.com/code-yeongyu/oh-my-openagent/master/assets/oh-my-openagent.schema.json",
   "agents": {
     "sisyphus": {
